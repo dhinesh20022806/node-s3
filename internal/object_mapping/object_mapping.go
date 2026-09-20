@@ -18,10 +18,26 @@ type ObjectMapping struct {
 	ObjectSize int
 }
 
+// 512 mb files limited
+// same time 8 cores write concurrent should be done
+// make sure pick the read file should be unique among other cores
+// read can pick multiple thread can access it no restict on created goroutine for read operation
+
+// return offset, size of the bytes and file name 
+// how to choose the file, check file is meet the 512 mb , for now if current data where going split means
+// move to new file to read those data, which means currentSize + fileSize <= 512 mb, look for 
+// other remaining 7 read-write files, if not found, then  not new file
+// create table for track the state of files in sql.db  like file name, file_path, state(idle, writing),
+// size , permission (rw,r)
+// data/a , b ...z after a1, b1...z1 , an ... zn.
+// make sure that new file write by this goroutine only and only up to 8 goroutine for write.
+func WriteObject(){
+	
+}
 
 func object() {
 
-	db, err := sql.Open("sqlite", "./app.db")
+	db, err := sql.Open("sqlite", "../app.db")
 
 	if err != nil {
 		log.Fatal(err)
