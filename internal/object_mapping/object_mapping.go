@@ -28,11 +28,37 @@ type ObjectMapping struct {
 // move to new file to read those data, which means currentSize + fileSize <= 512 mb, look for 
 // other remaining 7 read-write files, if not found, then  not new file
 // create table for track the state of files in sql.db  like file name, file_path, state(idle, writing),
-// size , permission (rw,r)
+// size , permission (rw,r), timestamp
 // data/a , b ...z after a1, b1...z1 , an ... zn.
 // make sure that new file write by this goroutine only and only up to 8 goroutine for write.
-func WriteObject(){
+
+// Limit concurrency to 8 using a buffered channel semaphore.
+// var sem = make(chan struct{}, 8)
+
+// gRPC 
+
+func WriteObject(data []byte, filePath string) int64 {
 	
+	// return offset, size and filename
+	
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY ,0644)
+  
+	 defer file.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	offset, err := file.Seek(0, io.SeekEnd) // what is meaning of 0 here
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	file.Write(data)
+
+
+	return offset
 }
 
 func object() {
@@ -57,7 +83,7 @@ func object() {
 	_, err = db.Exec(createTableSQL)
 
 	if err != nil {
-		log.Fatal("Failed to create table: %v", err)
+		log.Fatalf("Failed to create table: %v", err)
 	}
 
 	fmt.Println("Table create or verified successfully.")
@@ -114,7 +140,6 @@ func object() {
 
 
 }
-
 
 
 func bringBackEle() {
