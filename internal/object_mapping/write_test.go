@@ -2,13 +2,22 @@ package objectmapping
 
 import (
 	"bytes"
+	_ "database/sql"
 	"io"
 	"log"
 	"os"
 	"testing"
+	"uuid"
 )
 
+
+
 func TestWriteObject(t *testing.T) {
+
+	if err := InitDB(); err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
 	// expect this method to write 
 
@@ -51,9 +60,19 @@ func TestWriteObject(t *testing.T) {
 	}
 
 	if !bytes.Equal(blob, buffer[:bufferRead]){
-t.Errorf("different content")
+         t.Errorf("different content")
 	}
 
+	newUUid := uuid.New().String()
+
+	key := WriteRepo(writtenOffset, "../../outputs", newUUid, size)
+
+
+	expectedBytes := ReadObject(key)
+
+	if !bytes.Equal(blob, expectedBytes){
+         t.Errorf("different content after ReadObject")
+	}
 
       
 }

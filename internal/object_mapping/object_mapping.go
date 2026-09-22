@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"uuid"
+
+	_ "modernc.org/sqlite"
 )
 
 
@@ -14,8 +16,8 @@ type ObjectMapping struct {
 	ID string
 	ObjectId string
 	FileName string
-	StartOffset byte
-	ObjectSize int
+	StartOffset int64
+	ObjectSize int64
 }
 
 // 512 mb files limited
@@ -36,6 +38,76 @@ type ObjectMapping struct {
 // var sem = make(chan struct{}, 8)
 
 // gRPC 
+
+var db *sql.DB
+
+func InitDB() error {
+	var err error
+	db, err = sql.Open("sqlite", "../../app.db")
+	if err != nil {
+		return err
+	}
+
+	return db.Ping()
+}
+
+ 
+
+func ReadObject(objectId string) []byte {
+
+	var obj ObjectMapping;
+
+readSQL := `
+	SELECT id, object_id, file_name, start_offset, object_size
+	FROM object_mapping
+	WHERE object_id = ?
+`
+
+err := db.QueryRow(readSQL, objectId).Scan(
+	&obj.ID,
+	&obj.ObjectId,
+	&obj.FileName,
+	&obj.StartOffset,
+	&obj.ObjectSize,
+)
+
+	if err != nil {
+		log.Fatalf("error at scan %v", err)
+	}
+
+	file, err := os.Open(obj.FileName)
+
+	if err != nil {
+		log.Fatalf("error at scan %v", err)
+	}
+
+	_, err = file.Seek(int64(obj.StartOffset), io.SeekStart)
+
+	buffer := make([]byte, obj.ObjectSize)
+
+	bufferRead, err := file.Read(buffer)
+
+	if err != nil {
+		log.Fatalf("buffer read error %v", err)
+	}
+
+	return buffer[:bufferRead]
+}
+
+
+func WriteRepo(offset int64, fileName string, objectKey string, size int) string {
+
+	newUUID := uuid.New().String()
+
+	insertSQL := `INSERT INTO object_mapping (id, object_id, file_name, start_offset, object_size)
+	            values (?, ?, ?, ?, ?);`
+	
+	if _, err := db.Exec(insertSQL, newUUID, newUUID, fileName, offset, size); err != nil {
+		log.Fatal(err)
+	}
+
+	return newUUID
+}
 
 func WriteObject(data []byte, filePath string) int64 {
 	
@@ -115,14 +187,7 @@ func object() {
 		
 	}
 
-	newUUID := uuid.New().String()
-
-	insertSQL := `INSERT INTO object_mapping (id, object_id, file_name, start_offset, object_size)
-	            values (?, ?, ?, ?, ?);`
 	
-	if _, err = db.Exec(insertSQL, newUUID, newUUID, "outputs", beginingAddress, size); err != nil {
-		log.Fatal(err)
-	}
 	// err = os.WriteFile("outputs", blob, 0644)
 
 // /
