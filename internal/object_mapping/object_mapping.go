@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
 	"uuid"
 
 	_ "modernc.org/sqlite"
@@ -19,6 +20,19 @@ type ObjectMapping struct {
 	StartOffset int64
 	ObjectSize int64
 }
+
+type PointerMeta struct {
+	pointer int
+	alphabetPointer int
+}
+
+type Permission string
+
+const (
+	ReadAndWrite Permission = "rw"
+	ReadOnly Permission = "r"
+)
+
 
 // 512 mb files limited
 // same time 8 cores write concurrent should be done
@@ -39,6 +53,124 @@ type ObjectMapping struct {
 
 // gRPC 
 
+// how to handle internal fragmentation
+
+// who is reponsible for creating file
+
+
+func createFile() {
+
+	 alphabet := "abcdefghijklmnopqrstuvwxyz"
+
+	 data, err := readPointer()
+
+	 if err != nil {
+		log.Fatalf("err %v", err)
+	 }
+
+	pointer := data.pointer;
+	alphabet_pointer := data.alphabetPointer;
+	 fileName := fmt.Sprintf("../../data/%s-%d", alphabet[alphabet_pointer], pointer)
+	 os.Create(fileName)
+	 alphabet_pointer += 1
+	 if alphabet_pointer == 26 {
+		pointer += 1
+		alphabet_pointer = 0
+	 }
+	 updatePointers(pointer, alphabet_pointer)
+
+}
+
+func main(){
+
+	//  cors := runtime.NumCPU()
+
+	//  var sem = make(chan struct{}, cors)
+
+
+	 // file name should be data/a data/b ... data/z 
+	 // data/a1 data/b1 ... data/z1
+
+
+
+
+	 createTableSQL := `CREATE TABLE IF NOT EXISTS object_mapping (
+	               id TEXT PRIMARY KEY,
+				   object_id TEXT,
+				   file_id TEXT,
+				   start_offset TEXT,
+				   object_size INTEGER,
+				   deleted_at TIMESTAMP,
+				   FOREIGN KEY (file_id) REFERENCES file_detail(id) ON DELETE CACADE
+	);`;
+
+	 createSQLFile := `CREATE TABLE IF NOT EXISTS file_detail (
+	               id TEXT PRIMARY KEY,
+				   file_path TEXT,
+				   state TEXT CHECK (state IN ('idle', 'write')),
+				   size INTEGER,
+				   permission TEXT CHECK (permission IN ('r', 'rw')), 
+				   timestamp DATATIME DEFAULT CURRENT_TIMESTAMP`;
+	 
+	createPointer := `CREATE TABLE IF NOT EXISTS pointer_meta (
+	id TEXT PRIMARY KEY,
+	pointer INTEGER DEFAULT 0 NOT NULL,
+	alphabet_pointer INTEGER DEFAULT 0 NOT NULL,
+	timestamp DATATIME DEFAULT CURRENT_TIMESTAMP
+	)`;
+
+	db.Exec(createTableSQL);
+	db.Exec(createSQLFile)
+	db.Exec(createPointer)
+
+
+	// when to change the file from rw to r ? when file is inability to store data ? it's works but how to handle 
+	// that internal fragramentation ?
+
+	// here the idea , instead of checking 512 mb large for each file , when about to exceed the file size 
+	// make the last data append to that file and mark it's readonly, instead of capcity now it's miniumum 
+	// size requirement to create new file , is this create external fragementation ?
+
+
+
+	// when to increase the pointer , when there is need to create new file after wards
+
+	// go routine for 8 max 
+
+	// idle + more space
+
+	// elezabeth olsen, scarlett johansson, ... 6
+
+	// check if 8 eight file are writing , if no create file move to writeObject
+
+
+	count := activeFile()
+
+	if count < runtime.NumCPU() {
+		// TODO: create new file
+		// pass it
+	}
+
+	WriteObject()
+}
+
+// pick any available non active file // write a function
+
+func activeFile() int {
+	query := `SELECT COUNT(*) FROM file_detail WHERE state = 'write'`;
+
+	var count int;
+	if err := db.QueryRow(query).Scan(&count); err != nil {
+		log.Fatalln(err)
+	}
+	return count
+}
+
+
+type AiRequest struct {
+	Messages string `json:message`
+}
+
 var db *sql.DB
 
 func InitDB() error {
@@ -51,11 +183,31 @@ func InitDB() error {
 	return db.Ping()
 }
 
- 
+var MAX_FILE_SIZE = 512 * 1024 * 1024
+
+func isAboveRequiredFileSize(size int) bool {
+	return size <= MAX_FILE_SIZE
+}
+
+func formatSize(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.2f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
 
 func ReadObject(objectId string) []byte {
 
 	var obj ObjectMapping;
+
+	fmt.Print(runtime.NumCPU())
 
 readSQL := `
 	SELECT id, object_id, file_name, start_offset, object_size
@@ -104,6 +256,45 @@ func WriteRepo(offset int64, fileName string, objectKey string, size int) string
 	
 	if _, err := db.Exec(insertSQL, newUUID, newUUID, fileName, offset, size); err != nil {
 		log.Fatal(err)
+	}
+
+	return newUUID
+}
+func updatePointers(pointer int, alphabet_pointer int) {
+	update_query := `UPDATE pointer_meta SET pointer = ?, alphabet_pointer = ?`
+	if _, err := db.Exec(update_query, pointer, alphabet_pointer); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func readPointer() (*PointerMeta, error) {
+
+	var obj PointerMeta
+
+	read_query := `SELECT pointer, alphabet_pointer FROM pointer_meta`
+
+	err := db.QueryRow(read_query).Scan(
+		&obj.pointer,
+		&obj.alphabetPointer,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return &obj, nil
+}
+
+
+
+func InsertFileRepo(filename string, permission Permission) string {
+
+	newUUID := uuid.New().String()
+
+	insertSQL := `INSERT INTO file_detail (id, file_path, state, size, permission)
+	              value (?, ?, ?, ?, ?)`;
+	
+    if _, err := db.Exec(insertSQL, newUUID, filename, "idle", 0, permission ); err != nil {
+		log.Fatalf("Error occured when insert new file %v", err)
 	}
 
 	return newUUID
