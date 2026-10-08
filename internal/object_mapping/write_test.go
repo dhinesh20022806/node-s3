@@ -3,6 +3,7 @@ package objectmapping
 import (
 	"bytes"
 	_ "database/sql"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -75,4 +76,26 @@ func TestWriteObject(t *testing.T) {
 	}
 
       
+}
+
+func TestCreateFile(t *testing.T) {
+
+	if err := InitDB(); err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+		createPointer := `CREATE TABLE IF NOT EXISTS pointer_meta (
+	id TEXT PRIMARY KEY,
+	pointer INTEGER DEFAULT 0 NOT NULL,
+	alphabet_pointer INTEGER DEFAULT 0 NOT NULL,
+	timestamp DATATIME DEFAULT CURRENT_TIMESTAMP
+	)`;
+
+	db.Exec(createPointer)
+
+	filename :=  CreateFile()
+
+	fmt.Printf("the filename is %s\n",filename)
+
 }

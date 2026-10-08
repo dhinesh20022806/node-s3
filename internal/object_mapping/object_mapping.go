@@ -2,6 +2,7 @@ package objectmapping
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -33,6 +34,15 @@ const (
 	ReadOnly Permission = "r"
 )
 
+type InputData struct {
+	key string
+	data []byte
+}
+
+type Queue struct {
+	queue []InputData
+}
+
 
 // 512 mb files limited
 // same time 8 cores write concurrent should be done
@@ -58,19 +68,27 @@ const (
 // who is reponsible for creating file
 
 
-func createFile() {
-
+func CreateFile() string {
 	 alphabet := "abcdefghijklmnopqrstuvwxyz"
 
 	 data, err := readPointer()
 
+
 	 if err != nil {
-		log.Fatalf("err %v", err)
+		// fmt.Printf("data: %d %d\n", data.pointer, data.alphabetPointer)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			data = &PointerMeta{pointer: 0, alphabetPointer: 0}
+		} else {
+			log.Fatalf("err %v", err)
+		}
 	 }
 
-	pointer := data.pointer;
+	pointer := data.pointer 
 	alphabet_pointer := data.alphabetPointer;
-	 fileName := fmt.Sprintf("../../data/%s-%d", alphabet[alphabet_pointer], pointer)
+
+	 fileName := fmt.Sprintf("../../data/%s%d", string(alphabet[alphabet_pointer]), pointer)
+
 	 os.Create(fileName)
 	 alphabet_pointer += 1
 	 if alphabet_pointer == 26 {
@@ -78,10 +96,35 @@ func createFile() {
 		alphabet_pointer = 0
 	 }
 	 updatePointers(pointer, alphabet_pointer)
-
+	 return fileName;
 }
 
 func main(){
+
+
+	queue := []string{"dog", "cat", "bat", "hat"}
+
+	go func() {
+		for {
+			for i := 0; i < len(queue); i++ {
+
+			go func(data string) {
+
+               fmt.Print(data)
+
+			}(queue[i])
+
+			}
+			
+		}
+	}()
+
+	go func() {
+
+		queue = append(queue, "")
+
+
+	}()
 
 	//  cors := runtime.NumCPU()
 
@@ -119,10 +162,22 @@ func main(){
 	timestamp DATATIME DEFAULT CURRENT_TIMESTAMP
 	)`;
 
-	db.Exec(createTableSQL);
-	db.Exec(createSQLFile)
-	db.Exec(createPointer)
+	_, err := db.Exec(createTableSQL);
+	if err != nil {
+		log.Fatalf("Failed to create table: %v:", err)
+	}
+	_, err = db.Exec(createSQLFile)
+	if err != nil {
+		log.Fatalf("Failed to Create Sql File Table: %v", err)
+	}
+	
+	_, err = db.Exec(createPointer)
 
+	if err != nil {
+		log.Fatalf("Failed to Create pointer Table: %v", err)
+	}
+
+	fmt.Printf("Tables are Created!\n")
 
 	// when to change the file from rw to r ? when file is inability to store data ? it's works but how to handle 
 	// that internal fragramentation ?
@@ -144,14 +199,21 @@ func main(){
 	// check if 8 eight file are writing , if no create file move to writeObject
 
 
-	count := activeFile()
+	count := readWriteFileCount()
 
-	if count < runtime.NumCPU() {
+	// plus in demand 
+	// minium eight read-and-write file exists 
+
+	if count < 8 {
 		// TODO: create new file
 		// pass it
+
+		filePath := CreateFile()
+
+		WriteObject([]byte("Hello, World"), filePath);
 	}
 
-	WriteObject()
+	
 }
 
 // pick any available non active file // write a function
@@ -160,6 +222,17 @@ func activeFile() int {
 	query := `SELECT COUNT(*) FROM file_detail WHERE state = 'write'`;
 
 	var count int;
+	if err := db.QueryRow(query).Scan(&count); err != nil {
+		log.Fatalln(err)
+	}
+	return count
+}
+
+func readWriteFileCount() int {
+	query := `SELECT COUNT(*) FROM file_detail WHERE permission = "rw";`
+
+	var count int;
+
 	if err := db.QueryRow(query).Scan(&count); err != nil {
 		log.Fatalln(err)
 	}
@@ -265,6 +338,23 @@ func updatePointers(pointer int, alphabet_pointer int) {
 	if _, err := db.Exec(update_query, pointer, alphabet_pointer); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func InsertPointer() error {
+
+	// var obj PointerMeta 
+
+	exec_query := `INSERT INTO pointer_meta (pointer, alphabet_pointer) VALUES
+	                (?, ?)`;
+	_, err := db.Exec(exec_query, 0, 0)
+
+
+	if err != nil {
+
+		return err
+	}
+	return nil
+
 }
 
 func readPointer() (*PointerMeta, error) {
