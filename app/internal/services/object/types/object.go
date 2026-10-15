@@ -7,6 +7,6 @@ import (
 )
 
 type ObjectService interface {
-	StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) 
-	GetObject(ctx context.Context, req *genpb.GetObjectRequest) 
+	StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) error
+	GetObject(ctx context.Context, req *genpb.GetObjectRequest) ([]byte, error)
 }

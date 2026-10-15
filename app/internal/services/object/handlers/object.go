@@ -2,10 +2,9 @@ package handlers
 
 import (
 	"context"
-	"os"
 
 	genpb "github.com/dhinesh20022806/grpc_service/proto/gen"
-	"github.com/dhinesh20022806/node-s3/internal/services/object/types"
+	"github.com/dhinesh20022806/node-s3/app/internal/services/object/types"
 	"google.golang.org/grpc"
 )
 
@@ -25,21 +24,10 @@ func NewObjectHandler ( grpc *grpc.Server ,objectService types.ObjectService)  {
 
 func (o *ObjectHandler) StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) (*genpb.StoreObjectResponse, error) {
 
-	bytesofdata := req.Data
-
-	file, err := os.OpenFile("./data/a", os.O_APPEND|os.O_CREATE, 0664)
+	err := o.objectService.StoreObject(ctx, req)
 
 	if err != nil {
-		panic(err)
-	}
-
-	_, err = file.Write(bytesofdata)
-
-	if err != nil {
-		return &genpb.StoreObjectResponse{
-			ObjectId: req.ObjectId,
-		}, err
-
+		return nil, err
 	}
 
 	return &genpb.StoreObjectResponse{
@@ -51,6 +39,15 @@ func (o *ObjectHandler) StoreObject(ctx context.Context, req *genpb.StoreObjectR
 func (o *ObjectHandler) GetObject(ctx context.Context, req *genpb.GetObjectRequest) (*genpb.GetObjectResponse, error) {
 
 
+  data, err := o.objectService.GetObject(ctx, req)
 
+
+  if err != nil {
+	return nil, err
+  }
+
+  return &genpb.GetObjectResponse{
+	Data: data,
+  }, nil
 
 } 

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -14,15 +15,15 @@ const (
 )
 
 type WriteResult struct {
-	filename string
-	bytesize int
-	startAddr string
-	err error
+	Filename string
+	Bytesize int
+	StartAddr int64
+	Err error
 }
 
 type WorkerJob struct {
-	data []byte
-	result chan *WriteResult
+	Data []byte
+	Result chan *WriteResult
 }
 
 
@@ -59,11 +60,11 @@ func (w *Worker) Run() {
 
 	for job := range w.Job {
 
-		result := w.HandleWrite(job.data)
+		result := w.HandleWrite(job.Data)
 
-		job.result <- result
+		job.Result <- result
 
-		close(job.result)
+		close(job.Result)
 	}
 
 
@@ -116,30 +117,34 @@ func (w *Worker) HandleWrite(data []byte) *WriteResult {
 
 	defer file.Close()
 
-	startingAddr := data[min(10, len(data))]
+	startingAddr, err := file.Seek(0, io.SeekCurrent)
+
+	if err != nil {
+		panic(err)
+	}
 
 	n, err := file.Write(data)
 
 	if err != nil {
 		return &WriteResult{
-			err: err,
-			startAddr: string(startingAddr),
+			Err: err,
+			StartAddr: startingAddr,
 		}
 	}
 
 	
 	if n != len(data) {
 		return &WriteResult{
-			err: err,
-			startAddr: string(startingAddr),
+			Err: err,
+			StartAddr:startingAddr,
 		}
 	}
 
 
 	return &WriteResult{
-		filename: w.currentFile,
-		startAddr: string(startingAddr),
-		bytesize: dataSize,
-		err: nil,
+		Filename: w.currentFile,
+		StartAddr: startingAddr,
+		Bytesize: dataSize,
+		Err: nil,
 	}
 }

@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
-
 	_ "github.com/glebarez/go-sqlite"
 )
 
 
 
+
 func main() {
 
+	// index := 0
 	
-	fmt.Print("s3 node")
+
 }
 
