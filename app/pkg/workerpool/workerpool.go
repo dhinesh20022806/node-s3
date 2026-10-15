@@ -9,7 +9,7 @@ import (
 
 
 type WorkerPool struct {
-	workers []*worker.Worker
+	Workers []*worker.Worker
 	queueSize int
 
 	wg sync.WaitGroup
@@ -18,24 +18,34 @@ type WorkerPool struct {
 func NewWorkerPool(queueSize int, numWorker int, allocator *fileallocator.FileAllocator) *WorkerPool {
 	
 	pool := &WorkerPool{
-		workers: make([]*worker.Worker, numWorker),
+		Workers: make([]*worker.Worker, numWorker),
 		queueSize: queueSize,
 	}
 
 	for i := 0; i < numWorker; i++ {
 		work := worker.NewWorker(i, make(chan worker.WorkerJob, queueSize), allocator, &pool.wg)
-		pool.workers = append(pool.workers, work)
+		pool.Workers = append(pool.Workers, work)
 	}
 	return pool
 }
 
 func (p *WorkerPool) Start() {
 
-	for _, worker := range p.workers {
+	for _, worker := range p.Workers {
 
 		p.wg.Add(1)
 
 		go worker.Run()
 	}
+
+}
+
+func (p *WorkerPool) Shutdown() {
+
+	for _, worker := range p.Workers {
+		close(worker.Job)
+	}
+
+	p.wg.Wait()
 
 }

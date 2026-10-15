@@ -28,7 +28,7 @@ type WorkerJob struct {
 
 type Worker struct {
 	id int
-	job chan WorkerJob
+	Job chan WorkerJob
 	allocator *fileallocator.FileAllocator
 	currentFile string
 	currentSize int
@@ -38,7 +38,7 @@ type Worker struct {
 func NewWorker(id int, job chan WorkerJob, allocator *fileallocator.FileAllocator, wg *sync.WaitGroup) *Worker {
 	return &Worker{
 		id:id,
-		job: job,
+		Job: job,
 		allocator: allocator,
 		wg: wg,
 	}
@@ -57,7 +57,7 @@ func (w *Worker) Run() {
 	}
 
 
-	for job := range w.job {
+	for job := range w.Job {
 
 		result := w.HandleWrite(job.data)
 
