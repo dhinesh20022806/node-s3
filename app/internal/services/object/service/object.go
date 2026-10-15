@@ -18,7 +18,11 @@ type Object struct {
 
 }
 
-func (o *Object) StoreObject(ctx context.Context, req *genpb.PutObjectRequest) error {
+func NewObject() *Object{
+	return &Object{}
+}
+
+func (o *Object) StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) error {
 
 
 		job := worker.WorkerJob{

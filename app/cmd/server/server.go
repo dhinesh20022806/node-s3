@@ -1,6 +1,9 @@
 package server
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/dhinesh20022806/node-s3/app/internal/services"
+	"github.com/gin-gonic/gin"
+)
 
 
 
@@ -15,8 +18,15 @@ func Run() {
 		})
 	})
 
+	
 
 
 	server.Run(":8999")
 
+}
+
+func GrpcRun() {
+	serviceGrpc := services.NewGrpcServer(":50052")
+
+	serviceGrpc.Run()
 }
