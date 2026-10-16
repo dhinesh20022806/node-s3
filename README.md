@@ -1,10 +1,10 @@
-### Node s3
+# Node s3
 
-This software lives in the node and recive or send objects to [data routine service](https://github.com/dhinesh20022806/data_routing_service)
+This software lives in the node and receive or send objects to [data routine service](https://github.com/dhinesh20022806/data_routing_service)
 
 ## Write object
 
-# Design choice
+### Design choice
 
 store each object on single file leads to inode exhausted and large memory files to load up in to memory can leads to crash the program. so i choose in gb size files it's 4 Gb
 
