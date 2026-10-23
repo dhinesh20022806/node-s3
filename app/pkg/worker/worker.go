@@ -1,7 +1,9 @@
 package worker
 
 import (
+	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -10,7 +12,7 @@ import (
 )
 
 const (
-	dataDir           = "/data"
+	dataDir           = "./data"
 	maxfilesize int64 = 4 << 30
 )
 
@@ -49,11 +51,19 @@ func (w *Worker) SetCurrentFile(file string) {
 }
 
 func (w *Worker) Run() {
+	fmt.Printf("w = %v\n", w)
 	defer w.wg.Done()
 
 	if err := w.OpenFile(); err != nil {
 
+		fmt.Printf("file Open err = %v\n", err)
 	}
+
+	log.Printf(
+		"worker %d started -> %s",
+		w.id,
+		w.currentFile,
+	)
 
 	for job := range w.Job {
 
@@ -63,6 +73,11 @@ func (w *Worker) Run() {
 
 		close(job.Result)
 	}
+
+	log.Printf(
+		"worker %d stopped",
+		w.id,
+	)
 
 }
 
@@ -85,6 +100,12 @@ func (w *Worker) OpenFile() error {
 
 	w.currentFile = filename
 	w.currentSize = 0
+
+	log.Printf(
+		"worker %d -> new file %s",
+		w.id,
+		filePath,
+	)
 
 	return nil
 }

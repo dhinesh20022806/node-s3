@@ -19,6 +19,7 @@ func init() {
 	no_worker := runtime.GOMAXPROCS(0)
 	worker_p := workerpool.NewWorkerPool(8, no_worker, fileAlloc)
 	DisPatcher = NewDispatcher(worker_p)
+	worker_p.Start()
 
 }
 
