@@ -9,8 +9,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-
-
 type grpcServer struct {
 	address string
 }
@@ -36,7 +34,6 @@ func (g *grpcServer) Run() error {
 
 	// register the server
 	fmt.Printf("grpc service were running: %s ", g.address)
-
 
 	return server.Serve(lis)
 }

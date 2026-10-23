@@ -7,18 +7,17 @@ import (
 	"github.com/dhinesh20022806/node-s3/app/pkg/worker"
 )
 
-
 type WorkerPool struct {
-	Workers []*worker.Worker
+	Workers   []*worker.Worker
 	queueSize int
 
 	wg sync.WaitGroup
 }
 
 func NewWorkerPool(queueSize int, numWorker int, allocator *fileallocator.FileAllocator) *WorkerPool {
-	
+
 	pool := &WorkerPool{
-		Workers: make([]*worker.Worker, numWorker),
+		Workers:   make([]*worker.Worker, numWorker),
 		queueSize: queueSize,
 	}
 

@@ -2,7 +2,6 @@ package dbx
 
 import "database/sql"
 
-
 var conn *sql.DB
 
 func init() {
@@ -20,17 +19,17 @@ func Connection() *sql.DB {
 }
 
 type Object struct {
-	Filename string
-	ObjectSize int
+	Filename     string
+	ObjectSize   int
 	StartAddress int64
-	Object_key string
-	Parts int
+	Object_key   string
+	Parts        int
 }
 
 func InsertObject(filename string, objectSize int, startAddress int64, object_key string, parts int) error {
 	query := `INSERT INTO object_mapping (file_name,object_size,start_address,object_key,parts)
-	        VALUES (?, ?, ?, ?, ?)`;
-	
+	        VALUES (?, ?, ?, ?, ?)`
+
 	result, err := conn.Exec(query, filename, objectSize, startAddress, object_key, parts)
 
 	if err != nil {
@@ -47,9 +46,9 @@ func InsertObject(filename string, objectSize int, startAddress int64, object_ke
 
 func Select(object_key string) (*Object, error) {
 
-	var object Object;
+	var object Object
 
-	query := `SELECT file_name, object_size, start_address, object_key, parts WHERE object_mapping object_key = ?`;
+	query := `SELECT file_name, object_size, start_address, object_key, parts WHERE object_mapping object_key = ?`
 
 	err := conn.QueryRow(query, object_key).Scan(
 		&object.Filename,
@@ -57,11 +56,11 @@ func Select(object_key string) (*Object, error) {
 		&object.StartAddress,
 		&object.Object_key,
 		&object.Parts,
-	);
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &object, nil
-} 
+}

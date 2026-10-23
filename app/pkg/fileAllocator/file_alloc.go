@@ -6,13 +6,10 @@ import (
 	filenamegenerator "github.com/dhinesh20022806/node-s3/app/pkg/fileNameGenerator"
 )
 
-
-
 type FileAllocator struct {
-	mu sync.Mutex 
+	mu        sync.Mutex
 	generator *filenamegenerator.FileNameGenerator
 }
-
 
 func NewFileAllocator(startIndex uint64) *FileAllocator {
 	return &FileAllocator{

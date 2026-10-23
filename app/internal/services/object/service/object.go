@@ -11,42 +11,35 @@ import (
 	"github.com/dhinesh20022806/node-s3/app/pkg/worker"
 )
 
-
-
-
 type Object struct {
-
 }
 
-func NewObject() *Object{
+func NewObject() *Object {
 	return &Object{}
 }
 
 func (o *Object) StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) error {
 
-
-		job := worker.WorkerJob{
+	job := worker.WorkerJob{
 		Data: req.Data,
 	}
-
-	
 
 	dispatcher.DisPatcher.Submit(ctx, job)
 
 	select {
-		case result := <- job.Result:
+	case result := <-job.Result:
 
-			if result.Err != nil {
-				return errors.New("")
-			}
+		if result.Err != nil {
+			return errors.New("")
+		}
 
-			// save in sql
+		// save in sql
 
-			return nil
-		
-		case <- ctx.Done():
+		return nil
 
-			return errors.New("new error")
+	case <-ctx.Done():
+
+		return errors.New("new error")
 
 	}
 
@@ -54,13 +47,9 @@ func (o *Object) StoreObject(ctx context.Context, req *genpb.StoreObjectRequest)
 
 func (o *Object) GetObject(ctx context.Context, req *genpb.GetObjectRequest) ([]byte, error) {
 
-
 	object, err := dbx.Select(req.ObjectId)
 
-
 	if err != nil {
-
-
 
 	}
 
@@ -72,7 +61,7 @@ func (o *Object) GetObject(ctx context.Context, req *genpb.GetObjectRequest) ([]
 
 	buffer := make([]byte, object.ObjectSize)
 
-	_, err = file.ReadAt(buffer, object.StartAddress);
+	_, err = file.ReadAt(buffer, object.StartAddress)
 
 	if err != nil {
 
@@ -80,4 +69,3 @@ func (o *Object) GetObject(ctx context.Context, req *genpb.GetObjectRequest) ([]
 
 	return buffer, nil
 }
-

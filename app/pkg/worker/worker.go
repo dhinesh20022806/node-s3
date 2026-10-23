@@ -10,38 +10,37 @@ import (
 )
 
 const (
-	dataDir = "/data"
+	dataDir           = "/data"
 	maxfilesize int64 = 4 << 30
 )
 
 type WriteResult struct {
-	Filename string
-	Bytesize int
+	Filename  string
+	Bytesize  int
 	StartAddr int64
-	Err error
+	Err       error
 }
 
 type WorkerJob struct {
-	Data []byte
+	Data   []byte
 	Result chan *WriteResult
 }
 
-
 type Worker struct {
-	id int
-	Job chan WorkerJob
-	allocator *fileallocator.FileAllocator
+	id          int
+	Job         chan WorkerJob
+	allocator   *fileallocator.FileAllocator
 	currentFile string
 	currentSize int
-	wg *sync.WaitGroup
+	wg          *sync.WaitGroup
 }
 
 func NewWorker(id int, job chan WorkerJob, allocator *fileallocator.FileAllocator, wg *sync.WaitGroup) *Worker {
 	return &Worker{
-		id:id,
-		Job: job,
+		id:        id,
+		Job:       job,
 		allocator: allocator,
-		wg: wg,
+		wg:        wg,
 	}
 }
 
@@ -52,11 +51,9 @@ func (w *Worker) SetCurrentFile(file string) {
 func (w *Worker) Run() {
 	defer w.wg.Done()
 
-
 	if err := w.OpenFile(); err != nil {
 
 	}
-
 
 	for job := range w.Job {
 
@@ -67,7 +64,6 @@ func (w *Worker) Run() {
 		close(job.Result)
 	}
 
-
 }
 
 func (w *Worker) OpenFile() error {
@@ -77,18 +73,15 @@ func (w *Worker) OpenFile() error {
 	filePath := filepath.Join(
 		dataDir,
 		filename,
-	);
+	)
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND, 0644)
 
-	
 	if err != nil {
 		return err
 	}
 
 	defer file.Close()
-	
-	
 
 	w.currentFile = filename
 	w.currentSize = 0
@@ -105,11 +98,11 @@ func (w *Worker) HandleWrite(data []byte) *WriteResult {
 
 	}
 
-	if w.currentSize + dataSize > int(maxfilesize) {
+	if w.currentSize+dataSize > int(maxfilesize) {
 
 	}
 
-	file, err := os.OpenFile(w.currentFile, os.O_APPEND|os.O_CREATE, 0644);
+	file, err := os.OpenFile(w.currentFile, os.O_APPEND|os.O_CREATE, 0644)
 
 	if err != nil {
 		err = file.Close()
@@ -127,24 +120,22 @@ func (w *Worker) HandleWrite(data []byte) *WriteResult {
 
 	if err != nil {
 		return &WriteResult{
-			Err: err,
+			Err:       err,
 			StartAddr: startingAddr,
 		}
 	}
 
-	
 	if n != len(data) {
 		return &WriteResult{
-			Err: err,
-			StartAddr:startingAddr,
+			Err:       err,
+			StartAddr: startingAddr,
 		}
 	}
 
-
 	return &WriteResult{
-		Filename: w.currentFile,
+		Filename:  w.currentFile,
 		StartAddr: startingAddr,
-		Bytesize: dataSize,
-		Err: nil,
+		Bytesize:  dataSize,
+		Err:       nil,
 	}
 }

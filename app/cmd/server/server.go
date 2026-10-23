@@ -5,10 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 func Run() {
-
 
 	server := gin.Default()
 
@@ -17,9 +14,6 @@ func Run() {
 			"status": "success",
 		})
 	})
-
-	
-
 
 	server.Run(":8999")
 
