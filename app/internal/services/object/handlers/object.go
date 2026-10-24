@@ -24,9 +24,9 @@ func NewObjectHandler(grpc *grpc.Server, objectService types.ObjectService) {
 
 func (o *ObjectHandler) StoreObject(ctx context.Context, req *genpb.StoreObjectRequest) (*genpb.StoreObjectResponse, error) {
 
-	fmt.Printf("req object id = %s", req.Data)
-
 	err := o.objectService.StoreObject(ctx, req)
+
+	fmt.Errorf("errro = %v \n", err)
 
 	if err != nil {
 		return nil, err
@@ -41,6 +41,8 @@ func (o *ObjectHandler) StoreObject(ctx context.Context, req *genpb.StoreObjectR
 func (o *ObjectHandler) GetObject(ctx context.Context, req *genpb.GetObjectRequest) (*genpb.GetObjectResponse, error) {
 
 	data, err := o.objectService.GetObject(ctx, req)
+
+	fmt.Printf("error is %v", err)
 
 	if err != nil {
 		return nil, err

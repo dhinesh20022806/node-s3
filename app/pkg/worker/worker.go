@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -25,7 +26,7 @@ type WriteResult struct {
 
 type WorkerJob struct {
 	Data   []byte
-	Result chan *WriteResult
+	Result chan WriteResult
 }
 
 type Worker struct {
@@ -69,7 +70,9 @@ func (w *Worker) Run() {
 
 		result := w.HandleWrite(job.Data)
 
+		slog.Info("Result returned", "result fileName", result.Filename)
 		job.Result <- result
+		slog.Info("Returned to channel")
 
 		close(job.Result)
 	}
@@ -98,7 +101,7 @@ func (w *Worker) OpenFile() error {
 
 	defer file.Close()
 
-	w.currentFile = filename
+	w.currentFile = filePath
 	w.currentSize = 0
 
 	log.Printf(
@@ -110,7 +113,7 @@ func (w *Worker) OpenFile() error {
 	return nil
 }
 
-func (w *Worker) HandleWrite(data []byte) *WriteResult {
+func (w *Worker) HandleWrite(data []byte) WriteResult {
 
 	dataSize := len(data)
 
@@ -121,17 +124,43 @@ func (w *Worker) HandleWrite(data []byte) *WriteResult {
 
 	if w.currentSize+dataSize > int(maxfilesize) {
 
-	}
+		err := w.OpenFile()
+		slog.Info("openNewFile", "newFileName", w.currentFile)
 
-	file, err := os.OpenFile(w.currentFile, os.O_APPEND|os.O_CREATE, 0644)
+		if err != nil {
+			fmt.Printf("Open failed: err = %v", err)
+		}
+
+	}
+	slog.Info("file descriptor", "filename", w.currentFile)
+
+	file, err := os.OpenFile(w.currentFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
-		err = file.Close()
+
+		slog.Error("error openingfile", "error", err)
+
+		return WriteResult{
+			Err: err,
+		}
 	}
 
-	defer file.Close()
+	defer func() {
+
+		err = file.Close()
+
+		fmt.Printf("file closed err = %v", err)
+
+		if err != nil {
+			fmt.Printf("err = %v \n", err)
+		}
+
+	}()
 
 	startingAddr, err := file.Seek(0, io.SeekCurrent)
+
+	// startingAddr := int64(0)
+	// err = nil
 
 	if err != nil {
 		panic(err)
@@ -140,20 +169,23 @@ func (w *Worker) HandleWrite(data []byte) *WriteResult {
 	n, err := file.Write(data)
 
 	if err != nil {
-		return &WriteResult{
+		slog.Error("error writing file", "err", err)
+		return WriteResult{
 			Err:       err,
 			StartAddr: startingAddr,
 		}
 	}
 
 	if n != len(data) {
-		return &WriteResult{
+		return WriteResult{
 			Err:       err,
 			StartAddr: startingAddr,
 		}
 	}
 
-	return &WriteResult{
+	slog.Info("#data written successfully!", "filename", w.currentFile, "bytesize", dataSize)
+
+	return WriteResult{
 		Filename:  w.currentFile,
 		StartAddr: startingAddr,
 		Bytesize:  dataSize,

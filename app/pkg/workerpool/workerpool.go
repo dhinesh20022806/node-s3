@@ -1,7 +1,6 @@
 package workerpool
 
 import (
-	"fmt"
 	"sync"
 
 	fileallocator "github.com/dhinesh20022806/node-s3/app/pkg/fileAllocator"
@@ -25,7 +24,7 @@ func NewWorkerPool(queueSize int, numWorker int, allocator *fileallocator.FileAl
 	for i := 0; i < numWorker; i++ {
 		work := worker.NewWorker(i, make(chan worker.WorkerJob, queueSize), allocator, &pool.wg)
 		pool.Workers = append(pool.Workers, work)
-		fmt.Printf("i = %d\n", i)
+
 	}
 	return pool
 }
@@ -34,7 +33,6 @@ func (p *WorkerPool) Start() {
 
 	for _, worker := range p.Workers {
 
-		fmt.Printf("worker = %v\n", worker)
 		p.wg.Add(1)
 
 		go worker.Run()
