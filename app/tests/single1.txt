@@ -1,0 +1,16 @@
+goos: linux
+goarch: amd64
+pkg: github.com/dhinesh20022806/node-s3/app/tests
+cpu: Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz
+BenchmarkSingleThread-8   	   65938	     16455 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   36542	     35120 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   39735	     97859 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   10000	    325933 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   10000	    409675 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    4544	    310540 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    5499	    252689 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    6072	    491806 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	       1	1115860873 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    2431	    872921 ns/op	     112 B/op	       3 allocs/op
+PASS
+ok  	github.com/dhinesh20022806/node-s3/app/tests	38.172s

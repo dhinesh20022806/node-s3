@@ -1,0 +1,29 @@
+goos: linux
+goarch: amd64
+pkg: github.com/dhinesh20022806/node-s3/app/tests
+cpu: Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz
+BenchmarkSingleThread-8   	   68334	    673042 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   73977	     14706 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   84285	     87573 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   38083	    104679 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   74907	    280810 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    3198	    687123 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    4015	    349500 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   10000	    517146 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	    2323	    587088 ns/op	     112 B/op	       3 allocs/op
+BenchmarkSingleThread-8   	   10000	    222000 ns/op	     112 B/op	       3 allocs/op
+BenchmarkMultiThread-8    	   47619	    173320 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   45361	    162211 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   41523	    165606 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   50354	    268754 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	--- FAIL: BenchmarkMultiThread
+    stress_test.go:43: failed to remove data directory: unlinkat /home/dhinesh/Root/mini_cloud/node/app/tests/data: directory not empty
+--- FAIL: BenchmarkMultiThread-8
+    stress_test.go:43: failed to remove data directory: unlinkat /home/dhinesh/Root/mini_cloud/node/app/tests/data: directory not empty
+BenchmarkMultiThread-8    	   45625	    199606 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   47877	     66371 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   42970	     25395 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   44919	    119918 ns/op	     336 B/op	      10 allocs/op
+BenchmarkMultiThread-8    	   41230	    104941 ns/op	     337 B/op	      10 allocs/op
+PASS
+ok  	github.com/dhinesh20022806/node-s3/app/tests	202.930s

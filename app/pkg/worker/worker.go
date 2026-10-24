@@ -3,7 +3,6 @@ package worker
 import (
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -52,19 +51,13 @@ func (w *Worker) SetCurrentFile(file string) {
 }
 
 func (w *Worker) Run() {
-	fmt.Printf("w = %v\n", w)
+
 	defer w.wg.Done()
 
 	if err := w.OpenFile(); err != nil {
 
-		fmt.Printf("file Open err = %v\n", err)
+		slog.Info("file Open err", "err", err)
 	}
-
-	log.Printf(
-		"worker %d started -> %s",
-		w.id,
-		w.currentFile,
-	)
 
 	for job := range w.Job {
 
@@ -76,11 +69,6 @@ func (w *Worker) Run() {
 
 		close(job.Result)
 	}
-
-	log.Printf(
-		"worker %d stopped",
-		w.id,
-	)
 
 }
 
@@ -103,12 +91,6 @@ func (w *Worker) OpenFile() error {
 
 	w.currentFile = filePath
 	w.currentSize = 0
-
-	log.Printf(
-		"worker %d -> new file %s",
-		w.id,
-		filePath,
-	)
 
 	return nil
 }
@@ -149,7 +131,7 @@ func (w *Worker) HandleWrite(data []byte) WriteResult {
 
 		err = file.Close()
 
-		fmt.Printf("file closed err = %v", err)
+		slog.Info("file closed", "err", err)
 
 		if err != nil {
 			fmt.Printf("err = %v \n", err)
